@@ -26,15 +26,15 @@ def save_simulation_plot(frames: list[MarketFrame], filename: str = "simulation.
 
     # Prices over time
     fig.add_trace(go.Scatter(x=steps, y=logs_prices, mode='lines+markers', name='Logs Price'))
-    fig.add_trace(go.Scatter(x=steps, y=planks_prices, mode='lines+markers', name='Planks Price'))
+    #fig.add_trace(go.Scatter(x=steps, y=planks_prices, mode='lines+markers', name='Planks Price'))
 
     # Activation levels
     fig.add_trace(go.Scatter(x=steps, y=logging_activation, mode='lines+markers', name='Logging Camp Activation'))
-    fig.add_trace(go.Scatter(x=steps, y=sawmill_activation, mode='lines+markers', name='Sawmill Activation'))
+    #fig.add_trace(go.Scatter(x=steps, y=sawmill_activation, mode='lines+markers', name='Sawmill Activation'))
 
     # Revenues
     fig.add_trace(go.Scatter(x=steps, y=logging_revenues, mode='lines+markers', name='Logging Revenue'))
-    fig.add_trace(go.Scatter(x=steps, y=sawmill_revenues, mode='lines+markers', name='Sawmill Revenue'))
+    #fig.add_trace(go.Scatter(x=steps, y=sawmill_revenues, mode='lines+markers', name='Sawmill Revenue'))
 
     fig.update_layout(
         title='Simulation Data Over Time',

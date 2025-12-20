@@ -113,17 +113,21 @@ sawmill = BuildingType(name="Sawmill",
     inputs={logs: 4}, worker_demand=..., worker_wage=..., outputs={planks: 5},
 )
 pop_centers = BuildingType(name="Population Centers",
-    inputs={planks: 3}, worker_demand=..., worker_wage=..., outputs={},
+    inputs={logs: 3}, worker_demand=..., worker_wage=..., outputs={},
 )
 
 frames = []
 market_frame = MarketFrame(
-    buildings=[Building(logging_camp, level=1), Building(sawmill, level=1), FixedBuilding(pop_centers, level=1)],
+    buildings=[
+        Building(logging_camp, level=1), 
+        #Building(sawmill, level=1), 
+        FixedBuilding(pop_centers, level=1)
+    ],
     prices={logs: 0, planks: 0},
 )
 frames.append(market_frame)
 print(market_frame)
-for i in range(150):
+for i in range(60):
     if i % 5 == 0:
         print(500*"=")
     else:
