@@ -1,44 +1,36 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+import plotly.graph_objects as go
+
 from main import *
+from utility import all_same
 
 def save_simulation_plot(frames: list[MarketFrame], filename: str = "simulation.html") -> None:
-    import plotly.graph_objects as go
+    fig = go.Figure(layout={"paper_bgcolor": "#FFFFFF"})
     steps = list(range(len(frames)))
-    logs_prices = [mf.prices[logs] for mf in frames]
-    planks_prices = [mf.prices[planks] for mf in frames]
-    # Activation levels for the specific buildings
-    logging_activation = [mf.buildings[0].activation for mf in frames]
-    sawmill_activation = [mf.buildings[1].activation for mf in frames]
-    # Sum revenues for each building type
-    logging_revenues = [
-        sum(b.get_revenue(mf) for b in mf.buildings if b.type.name == "Logging Camp")
-        for mf in frames
-    ]
-    sawmill_revenues = [
-        sum(b.get_revenue(mf) for b in mf.buildings if b.type.name == "Sawmill")
-        for mf in frames
-    ]
 
-    import plotly.graph_objects as go
-
-    fig = go.Figure()
-
-    # Prices over time
-    fig.add_trace(go.Scatter(x=steps, y=logs_prices, mode='lines+markers', name='Logs Price'))
-    #fig.add_trace(go.Scatter(x=steps, y=planks_prices, mode='lines+markers', name='Planks Price'))
-
-    # Activation levels
-    fig.add_trace(go.Scatter(x=steps, y=logging_activation, mode='lines+markers', name='Logging Camp Activation'))
-    #fig.add_trace(go.Scatter(x=steps, y=sawmill_activation, mode='lines+markers', name='Sawmill Activation'))
-
-    # Revenues
-    fig.add_trace(go.Scatter(x=steps, y=logging_revenues, mode='lines+markers', name='Logging Revenue'))
-    #fig.add_trace(go.Scatter(x=steps, y=sawmill_revenues, mode='lines+markers', name='Sawmill Revenue'))
+    for good in frames[0].prices.keys():
+        prices = [market.prices[good] for market in frames]
+        if any(prices):
+            mode = "lines" if all_same(prices) else "lines"
+            fig.add_trace(go.Scatter(x=steps, y=prices, mode=mode, name=f"Price of {good.name}"))
+    
+    for i, first_building in enumerate(frames[0].buildings):
+        # TODO: remove exception?
+        if first_building.type is pop_centers:
+            continue
+        
+        activation_levels = [market.buildings[i].activation for market in frames]
+        if any(activation_levels):
+            mode = "lines" if all_same(activation_levels) else "lines+markers"
+            fig.add_trace(go.Scatter(x=steps, y=activation_levels, mode=mode, name=f"Activation of {first_building.type.name}"))
+        profits = [market.buildings[i].get_profit(market) for market in frames]
+        if any(profits):
+            mode = "lines" if all_same(profits) else "lines"
+            fig.add_trace(go.Scatter(x=steps, y=profits, mode=mode, name=f"Profit of {first_building.type.name}"))
 
     fig.update_layout(
         title='Simulation Data Over Time',
-        xaxis_title='Step',
+        xaxis_title='Frame',
         yaxis_title='Value',
         legend_title='Metrics',
     )
