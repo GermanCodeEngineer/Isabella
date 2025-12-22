@@ -6,12 +6,13 @@ from typing import ClassVar
 
 from utility import SaveInstances, three_way_max
 
-@grepr_dataclass(grepr_fields=["name"], unsafe_hash=True, frozen=True)
+@grepr_dataclass(grepr_fields=["name", "base_price"], unsafe_hash=True, frozen=True)
 class GoodType(SaveInstances):
     instances: ClassVar[list[GoodType]]
 
     name: str
     text_color: str
+    base_price: float
 
     @property
     def formatted_name(self):
@@ -74,7 +75,7 @@ class Building:
             ma_frame = copy(market)
             ma_frame.buildings = copy(market.buildings)
             ma_building = copy(market.buildings[own_index])
-            ma_building.activation += 0.1
+            ma_building.activation = round(self.activation + 0.1, 3)
             ma_frame.buildings[own_index] = ma_building
             print("more buildings [", ", ".join([b.lrepr() for b in ma_frame.buildings]), "]")
             ma_frame.prices = ma_frame.update_prices(indent="more   * ")
@@ -86,7 +87,7 @@ class Building:
             la_frame = copy(market)
             la_frame.buildings = copy(market.buildings)
             la_building = copy(market.buildings[own_index])
-            la_building.activation -= 0.1
+            la_building.activation = round(self.activation - 0.1, 3)
             la_frame.buildings[own_index] = la_building
             print("less buildings [", ", ".join([b.lrepr() for b in la_frame.buildings]), "]")
             la_frame.prices = la_frame.update_prices(indent="less * ")
@@ -148,21 +149,11 @@ class MarketFrame:
             price = self.get_good_price(good)
             
             try:
-                ratio = good_buy_orders / good_sell_orders
+                ratio = min(1.75, good_buy_orders / good_sell_orders)
             except ZeroDivisionError:
-                # TODO: improve
-                if good_buy_orders == 0:
-                    new_price = price
-                    #if verbose: print(f"{indent}same from no buys or sells")
-                else:
-                    new_price = max(price, 0.1) * 1.2
-                    #if verbose: print(f"{indent}hiked but no sells")
-            else:
-                if ratio > 1:
-                    price = max(price, 0.1)
-                new_price = price * ((ratio - 1) / 3 + 1)
-                #if verbose: print(f"{indent}normal adapted", ratio, ratio - 1, (ratio-1)/3+1, "!", price, new_price)
-            new_price = round(new_price, 3)
+                ratio = 1.75 if good_buy_orders > 0 else 1
+            
+            new_price = round(good.base_price * ratio, 3)
             new_prices[good] = new_price
             
             if verbose:
@@ -173,7 +164,7 @@ class MarketFrame:
                     print("stayed at", price)
                 else:
                     print(f"{Fore.RED}reduced from", price, "to", new_price, Fore.RESET)
-                print(f"{indent}    Buy", good_buy_orders, "Sell", good_sell_orders)
+                print(f"{indent}    Buy", good_buy_orders, "Sell", good_sell_orders, "Ratio", ratio)
         return new_prices
     
     def next_frame(self) -> MarketFrame:
@@ -184,8 +175,8 @@ class MarketFrame:
             building.next_frame(self)
         return MarketFrame(buildings=new_buildings, prices=new_prices)
 
-logs = GoodType(name="Logs", text_color=Fore.GREEN)
-planks = GoodType(name="Planks", text_color=Fore.YELLOW)
+logs = GoodType(name="Logs", text_color=Fore.GREEN, base_price=0.2)
+planks = GoodType(name="Planks", text_color=Fore.YELLOW, base_price=0.3)
 
 logging_camp = BuildingType(name="Logging Camp", text_color=Fore.GREEN,
     inputs={}, worker_demand=100, worker_wage=..., outputs={logs: 3},
@@ -205,7 +196,7 @@ market_frame = MarketFrame(
         Building(sawmill, level=1), 
         FixedBuilding(pop_centers, level=1)
     ],
-    prices={logs: 0, planks: 0},
+    prices={logs: logs.base_price, planks: planks.base_price},
 )
 frames.append(market_frame)
 
