@@ -1,38 +1,38 @@
 from __future__ import annotations
 from copy import deepcopy
 from colorama import init as init_colorama, Fore
-from pmp_manip.utility import grepr_dataclass
+from gceutils import grepr_dataclass, field
 from typing import ClassVar
 
 from utility import SaveInstances, three_way_max
 
-@grepr_dataclass(grepr_fields=["name"], unsafe_hash=True, frozen=True)
+@grepr_dataclass(unsafe_hash=True, frozen=True)
 class GoodType(SaveInstances):
     instances: ClassVar[list[GoodType]]
 
     name: str
-    text_color: str
+    text_color: str = field(grepr=False)
 
     @property
     def formatted_name(self):
         return f"{self.text_color}{self.name}{Fore.RESET}"
 
-@grepr_dataclass(grepr_fields=["name", "inputs", "outputs"], unsafe_hash=True, frozen=True)
+@grepr_dataclass(unsafe_hash=True, frozen=True)
 class BuildingType(SaveInstances):
     instances: ClassVar[list[BuildingType]]
 
     name: str
-    text_color: str
+    text_color: str = field(grepr=False)
     inputs: dict[GoodType, float]
-    worker_demand: int # TODO: add professions
-    worker_wage: float
+    worker_demand: int  = field(grepr=False) # TODO: add professions
+    worker_wage: float = field(grepr=False)
     outputs: dict[GoodType, float]
 
     @property
     def formatted_name(self):
         return f"{self.text_color}{self.name}{Fore.RESET}"
 
-@grepr_dataclass(grepr_fields=["type", "level", "activation"])
+@grepr_dataclass()
 class Building:
     type: BuildingType
     level: int
@@ -75,14 +75,14 @@ class Building:
         print("    Rev", round(self.get_revenue(market, SMALL_OFFSET), 3), "Exp", round(self.get_expenses(market, SMALL_OFFSET), 3), 
             "| profit", round(profit, 3), "->", round(self.get_profit(market, 0), 3))
     
-@grepr_dataclass(grepr_fields=[])
+@grepr_dataclass()
 class FixedBuilding(Building):
     activation: float = 1
             
     def get_profit(self, market: MarketFrame, activation_offset: float = 0) -> float:
         return 1 # Constant Profitability, should not change activation
 
-@grepr_dataclass(grepr_fields=["orders", "prices", "buildings"])
+@grepr_dataclass()
 class MarketFrame:
     buildings: list[Building]
     prices: dict[GoodType, float]
@@ -91,7 +91,7 @@ class MarketFrame:
         return self.prices[good]
     
     @property
-    def orders(self):
+    def orders(self) -> dict[GoodType, dict[str, float]]:
         buy_orders, sell_orders = self.get_good_buy_sell_orders()
         return {good: {"buy": buy_orders[good], "sell": sell_orders[good]} for good in GoodType.instances}
    
