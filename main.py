@@ -18,7 +18,7 @@ class GoodType(SaveInstances):
     def formatted_name(self):
         return f"{self.text_color}{self.name}{Fore.RESET}"
 
-@grepr_dataclass(unsafe_hash=True, frozen=True)
+@grepr_dataclass()
 class GoodOrderInfo:
     buy: float
     sell: float
